@@ -1,0 +1,3 @@
+com\finastra\ffdc\dataset\ingestion\MySpringBean.class
+com\finastra\ffdc\dataset\ingestion\MySpringBootApplication.class
+com\finastra\ffdc\dataset\ingestion\MySpringBootRouter.class
