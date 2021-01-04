@@ -1,7 +1,12 @@
 package com.finastra.ffdc.dataset.ingestion;
 
+import com.codahale.metrics.Slf4jReporter.LoggingLevel;
+
 import org.apache.camel.builder.RouteBuilder;
+import org.apache.camel.model.dataformat.JsonLibrary;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
+
 
 /**
  * A simple Camel route that triggers from a timer and calls a bean and prints
@@ -12,12 +17,24 @@ import org.springframework.stereotype.Component;
 @Component
 public class MySpringBootRouter extends RouteBuilder {
 
+    @Autowired
+    InputParametersSettings InputParametersSettings;
+
     @Override
     public void configure() {
 
-         from("timer:hello?period={{timer.period}}&repeatCount=1").routeId("hello1")
-        .process(exchange -> exchange.getIn().setBody("AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"))                             
-        .to("ffdc://bar?environment=lobdev&id=1988806a-8113-4cba-ab81-22b5eada6d99&secret=5a13861f-f1fd-441f-9683-72cee3f9b99e&dataSetId=trades-v1-27a8371b-9317-43ed-82c0-39835cf1ec03&fileName=2019-02-13T23:00:00.000Z.json");
+
+        from("timer://foo?repeatCount=1").routeId("sql-extract-route")
+        .to("sql:select * from customer?dataSource=#setupDataSource")   
+        .marshal()
+        .json(JsonLibrary.Jackson) 
+        .convertBodyTo(String.class)                         
+        .to("ffdc://bar?environment="+ InputParametersSettings.getEnvironment()
+                         +"&id="+InputParametersSettings.getId()
+                         +"&secret="+InputParametersSettings.getSecret()
+                         +"&dataSetId="+InputParametersSettings.getDataSetId()
+                         +"&fileName="+InputParametersSettings.getFileName());
     }
+
 
 }
